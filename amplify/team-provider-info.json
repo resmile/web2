@@ -10,6 +10,11 @@
       "StackName": "amplify-web2-staging-223340",
       "StackId": "arn:aws:cloudformation:ap-northeast-2:965619447539:stack/amplify-web2-staging-223340/ab0ab5b0-86d3-11ec-bb04-06201903311a",
       "AmplifyAppId": "dxrl7xvrmobxo"
+    },
+    "categories": {
+      "auth": {
+        "web24806eccb": {}
+      }
     }
   }
 }
