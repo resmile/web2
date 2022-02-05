@@ -232,3 +232,42 @@ export const onDeleteComment = /* GraphQL */ `
     }
   }
 `;
+export const onCreatePost2 = /* GraphQL */ `
+  subscription OnCreatePost2 {
+    onCreatePost2 {
+      id
+      name
+      location
+      description
+      image
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const onUpdatePost2 = /* GraphQL */ `
+  subscription OnUpdatePost2 {
+    onUpdatePost2 {
+      id
+      name
+      location
+      description
+      image
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const onDeletePost2 = /* GraphQL */ `
+  subscription OnDeletePost2 {
+    onDeletePost2 {
+      id
+      name
+      location
+      description
+      image
+      createdAt
+      updatedAt
+    }
+  }
+`;

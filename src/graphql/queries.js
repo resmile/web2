@@ -150,3 +150,36 @@ export const listComments = /* GraphQL */ `
     }
   }
 `;
+export const getPost2 = /* GraphQL */ `
+  query GetPost2($id: ID!) {
+    getPost2(id: $id) {
+      id
+      name
+      location
+      description
+      image
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const listPost2s = /* GraphQL */ `
+  query ListPost2s(
+    $filter: ModelPost2FilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listPost2s(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        name
+        location
+        description
+        image
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }
+  }
+`;

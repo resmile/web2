@@ -259,3 +259,51 @@ export const deleteComment = /* GraphQL */ `
     }
   }
 `;
+export const createPost2 = /* GraphQL */ `
+  mutation CreatePost2(
+    $input: CreatePost2Input!
+    $condition: ModelPost2ConditionInput
+  ) {
+    createPost2(input: $input, condition: $condition) {
+      id
+      name
+      location
+      description
+      image
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const updatePost2 = /* GraphQL */ `
+  mutation UpdatePost2(
+    $input: UpdatePost2Input!
+    $condition: ModelPost2ConditionInput
+  ) {
+    updatePost2(input: $input, condition: $condition) {
+      id
+      name
+      location
+      description
+      image
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const deletePost2 = /* GraphQL */ `
+  mutation DeletePost2(
+    $input: DeletePost2Input!
+    $condition: ModelPost2ConditionInput
+  ) {
+    deletePost2(input: $input, condition: $condition) {
+      id
+      name
+      location
+      description
+      image
+      createdAt
+      updatedAt
+    }
+  }
+`;

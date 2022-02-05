@@ -20,3 +20,11 @@ type Comment @model {
   post: Post @belongsTo
   content: String!
 }
+
+type Post2 @model {
+  id: ID!
+  name: String!
+  location: String!
+  description: String!
+  image: String
+}
