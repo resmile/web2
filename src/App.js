@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Amplify, {API, graphqlOperation, I18n} from 'aws-amplify'
 import config from './aws-exports'
 import { listPost2s } from './graphql/queries'
@@ -16,6 +16,7 @@ import {AgGridColumn, AgGridReact} from 'ag-grid-react';
 
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-alpine.css';
+import { GridApi, ColumnApi } from 'ag-grid-community';
 
 
 I18n.setLanguage('kr');
@@ -54,86 +55,133 @@ Amplify.configure(config);
 
 
 
-export default function App() {
-  const signUpConfig = {
-    defaultCountryCode: '82',
-    signUpFields: [
-      {
-        label: 'My custom email label',
-        key: 'username',
-        required: true,
-        displayOrder: 1,
-        type: 'string'
-      },
-    ]
-  };
-  const [posts, setPosts] = useState([]);
-  const rowData = [
-    {make: "Toyota", model: "Celica", price: 35000},
-    {make: "Ford", model: "Mondeo", price: 32000},
-    {make: "Porsche", model: "Boxter", price: 72000}
-  ];
+const App = () => {
+  const [gridApi, setGridApi] = useState(null);
+  const [gridColumnApi, setGridColumnApi] = useState(null);
+  const [rowData, setRowData] = useState(null);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [btndisabled, setBtnDisabled] = useState(true);
+  const onGridReady = (params) => {
+    setGridApi(params.api);
+    setGridColumnApi(params.columnApi);
 
-  useEffect(() => {
+    const updateData = (data) => params.api.setRowData(data);
+
     fetchPosts();
+   
+    updateData(rowData);
+  };
 
-    const subscription = API.graphql(graphqlOperation(onUpdatePost2))
-    .subscribe({
-      next: ({value})=>{
-        const post=value.data.onUpdatePost2;
-        console.log("new post->",post);
-        fetchPosts();
-      },
-      error: error => console.warn(error)
-    })
-    return () => {subscription.unsubscribe()}
-    
+  const onSelectionChanged = () => {
+    const data = gridApi.getSelectedRows();
 
-  }, []);
+    if (data.length > 0) {
+      setBtnDisabled(false);
+    } else {
+      setBtnDisabled(true);
+    }
+    setSelectedRows(gridApi.getSelectedRows());
+  };
+
+  const onCellValueChanged = (e) => {
+    console.log("changed", e.data);
+  };
+
   async function fetchPosts() {
     try {
       const postData = await API.graphql({ query: listPost2s });
-      setPosts(postData.data.listPost2s.items); // result: { "data": { "listPost2s": { "items": [/* ..... */] } } }
+      setRowData(postData.data.listPost2s.items); // result: { "data": { "listPost2s": { "items": [/* ..... */] } } }
     } catch (err) {
       console.log({ err })
     }
   }
+
   return (
-    <Authenticator
-    signUpConfig={signUpConfig}
-    signUpAttributes={[
-      'email',
-      'name',
-      'phone_number',
-    ]}>
-    {({ signOut, user }) => (
+    <>
+      <div style={{ width: "100%", height: "100%" }}>
+        <div
+          id="myGrid"
+          style={{
+            height: "600px",
+            width: "100%",
+          }}
+          className="ag-theme-alpine"
+        >
+          <h1>editable table</h1>
+          <div>
+            <button variant="contained" disabled={btndisabled}>
+              action1
+            </button>
+            <button variant="contained" disabled={btndisabled}>
+              action1
+            </button>
+            <button variant="contained" disabled={btndisabled}>
+              action1
+            </button>
+          </div>
+          <AgGridReact
+            rowData={rowData}
+            rowSelection={"multiple"}
+            suppressRowClickSelection={false}
+            defaultColDef={{
+              editable: true,
+              sortable: true,
+              minWidth: 100,
+              filter: true,
+              resizable: true,
+              floatingFilter: true,
+              flex: 1,
+            }}
+            sideBar={{
+              toolPanels: ["columns", "filters"],
+              defaultToolPanel: "",
+            }}
+            onGridReady={onGridReady}
+            onSelectionChanged={onSelectionChanged}
+            onCellEditingStopped={(e) => {
+              onCellValueChanged(e);
+            }}
+          >
+            <AgGridColumn
+              headerName="..HELLO."
+              headerCheckboxSelection={true}
+              checkboxSelection={true}
+              floatingFilter={false}
+              suppressMenu={true}
+              minWidth={50}
+              maxWidth={50}
+              width={50}
+              flex={0}
+              resizable={false}
+              sortable={false}
+              editable={false}
+              filter={false}
+              suppressColumnsToolPanel={true}
+            />
+            <AgGridColumn headerName="aaaaa">
+              <AgGridColumn field="name" minWidth={170} />
+            </AgGridColumn>
+            <AgGridColumn headerName="bbbbbb">
+              <AgGridColumn
+                field="description"
+                columnGroupShow="closed"
+                filter="agNumberColumnFilter"
+                width={120}
+                flex={0}
+              />
+              <AgGridColumn
+                field="location"
+                columnGroupShow="closed"
+                filter="agNumberColumnFilter"
+                width={100}
+                flex={0}
+              />
+            </AgGridColumn>
+          </AgGridReact>
+        </div>
+      </div>
+    </>
+  );
+};
 
-<div>
-<h1>Hello {user.username}</h1>
-<button onClick={signOut}>Sign out</button>
-
-{
-  posts.map(post => (
-    <div key={post.id}>
-      <h3>{post.name}</h3>
-      <p>{post.location}</p>
-    </div>
-  ))
-}
-<div className="ag-theme-alpine" style={{height: 400, width: 600}}>
-           <AgGridReact
-               rowData={posts}>
-               <AgGridColumn field="name" sortable={true} filter={true}></AgGridColumn>
-               <AgGridColumn field="description"></AgGridColumn>
-               <AgGridColumn field="location"></AgGridColumn>
-           </AgGridReact>
-       </div>
-</div>
-    )}
-  </Authenticator>
-  )
-}
-
-/*
-    
-*/
+export default App;
