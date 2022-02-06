@@ -60,6 +60,7 @@ const App = () => {
   const [gridColumnApi, setGridColumnApi] = useState(null);
   const [rowData, setRowData] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
+  const [editedRows, setEditedRows] = useState([]);
   const [btndisabled, setBtnDisabled] = useState(true);
   const onGridReady = (params) => {
     setGridApi(params.api);
@@ -85,6 +86,11 @@ const App = () => {
 
   const onCellValueChanged = (e) => {
     console.log("changed", e.data);
+    console.log("allData", rowData);
+    delete e.data.createdAt;
+    delete e.data.updatedAt;
+    setEditedRows(editedRows => [...editedRows, e.data])
+    console.log("changed rows", editedRows);
   };
 
   async function fetchPosts() {
@@ -94,6 +100,18 @@ const App = () => {
     } catch (err) {
       console.log({ err })
     }
+  }
+
+  async function onEditedRowsSave() {
+    try {
+      await editedRows.map(row=>{
+        const updatedTodo =  API.graphql({ query: mutations.updatePost2, variables: {input: row}});
+      })
+      
+    } catch (err) {
+      console.log({ err })
+    }
+
   }
 
   return (
@@ -118,6 +136,7 @@ const App = () => {
             <button variant="contained" disabled={btndisabled}>
               action1
             </button>
+            <button onClick={onEditedRowsSave}>저장</button>
           </div>
           <AgGridReact
             rowData={rowData}
