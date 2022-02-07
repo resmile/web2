@@ -32,7 +32,15 @@ export const listBlogs = /* GraphQL */ `
         id
         name
         posts {
-          nextToken
+          items {
+            title
+            comments {
+              items {
+                content
+              }
+            }
+          }
+
         }
         createdAt
         updatedAt

@@ -59,6 +59,7 @@ const App = () => {
   const [gridApi, setGridApi] = useState(null);
   const [gridColumnApi, setGridColumnApi] = useState(null);
   const [rowData, setRowData] = useState(null);
+  const [listPosts, setListPosts] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
   const [editedRows, setEditedRows] = useState([]);
   const [btndisabled, setBtnDisabled] = useState(true);
@@ -69,6 +70,7 @@ const App = () => {
     const updateData = (data) => params.api.setRowData(data);
 
     fetchPosts();
+    
    
     updateData(rowData);
   };
@@ -97,6 +99,21 @@ const App = () => {
     try {
       const postData = await API.graphql({ query: listPost2s });
       setRowData(postData.data.listPost2s.items); // result: { "data": { "listPost2s": { "items": [/* ..... */] } } }
+      
+
+      const blog = await API.graphql({ query: queries.listBlogs });
+      console.log("blog=>",blog.data.listBlogs.items );
+
+      const post = await API.graphql({ query: queries.listPosts });
+      setListPosts(post.data.listPosts.items); // result: { "data": { "listPost2s": { "items": [/* ..... */] } } }
+      console.log("post=>",post.data.listPosts.items );
+
+      const comments = await API.graphql({ query: queries.listComments });
+      console.log("comment=>",comments.data.listComments.items );
+
+
+
+
     } catch (err) {
       console.log({ err })
     }
@@ -125,6 +142,10 @@ const App = () => {
           }}
           className="ag-theme-alpine"
         >
+          <h1>Hello World</h1>
+      
+
+
           <h1>editable table</h1>
           <div>
             <button variant="contained" disabled={btndisabled}>
