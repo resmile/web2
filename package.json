@@ -10,6 +10,7 @@
     "ag-grid-community": "^26.2.1",
     "ag-grid-react": "^26.2.0",
     "aws-amplify": "^4.3.14",
+    "aws-amplify-react": "^5.1.9",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "5.0.0",
