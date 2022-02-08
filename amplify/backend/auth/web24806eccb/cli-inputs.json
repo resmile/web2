@@ -11,7 +11,7 @@
       "SMS Text Message"
     ],
     "smsAuthenticationMessage": "Your authentication code is {####}",
-    "smsVerificationMessage": "[스마일푸드] 인증번호 [{####}]를입력해주세요.",
+    "smsVerificationMessage": "Your verification code is {####}",
     "emailVerificationSubject": "Your verification code",
     "emailVerificationMessage": "Your verification code is {####}",
     "defaultPasswordPolicy": false,
@@ -22,7 +22,7 @@
     ],
     "aliasAttributes": [],
     "userpoolClientGenerateSecret": false,
-    "userpoolClientRefreshTokenValidity": "30",
+    "userpoolClientRefreshTokenValidity": 30,
     "userpoolClientWriteAttributes": [
       "email"
     ],
@@ -36,7 +36,7 @@
     "sharedId": "4806eccb",
     "resourceName": "web24806eccb",
     "authSelections": "userPoolOnly",
-    "useDefault": "manual",
+    "useDefault": "default",
     "userPoolGroupList": [
       "superadmin",
       "admin",
@@ -64,10 +64,10 @@
     "adminQueries": false,
     "triggers": {},
     "hostedUI": false,
-    "authProviders": [],
     "parentStack": {
       "Ref": "AWS::StackId"
     },
-    "permissions": []
+    "permissions": [],
+    "authProviders": []
   }
 }

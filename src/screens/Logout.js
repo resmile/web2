@@ -1,7 +1,7 @@
 import Auth from "@aws-amplify/auth";
 import React from "react";
 
-function Logout() {
+const Logout = () => {
   async function logOut() {
     Auth.signOut();
   }
