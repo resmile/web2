@@ -1,172 +1,213 @@
-import React, { useState } from 'react';
-import {  } from "react-router-dom";
-import {
-  BrowserRouter as Router, Route, Routes,
-  Link,
-  useNavigate,
-  useLocation,
-  Navigate,
-  Outlet
-} from "react-router-dom";
-import { fakeAuthProvider } from "./Auth";
-import UserList from "./screens/UserList";
-import UserDetail from "./screens/UserDetail"
+import React, { useState, useEffect, useRef } from 'react';
+import Amplify, { Auth, Hub } from "aws-amplify";
+import config from './aws-exports'
+Amplify.configure({
+  Auth: {
+    // REQUIRED - Amazon Cognito Region
+    region: "ap-northeast-2",
 
+    // OPTIONAL - Amazon Cognito User Pool ID
+    userPoolId: "ap-northeast-2_AgcnvVG8m",
 
-export default function App() {
-    return (
-    <AuthProvider>
-      <h1>Auth Example</h1>
+    // OPTIONAL - Amazon Cognito Web Client ID (26-char alphanumeric string)
+    userPoolWebClientId: "14li1lf5k2807vf2ik9dearid1",
+  },
+});
 
-      <p>
-        This example demonstrates a simple login flow with three pages: a public
-        page, a protected page, and a login page. In order to see the protected
-        page, you must first login. Pretty standard stuff.
-      </p>
+const initialFormState = {
+  username: "",
+  password: "",
+  email: "",
+  authCode: "",
+  formType: "signIn",
+};
 
-      <p>
-        First, visit the public page. Then, visit the protected page. You're not
-        yet logged in, so you are redirected to the login page. After you login,
-        you are redirected back to the protected page.
-      </p>
+const App = () => {
+  const [formState, updateFormState] = useState(initialFormState);
 
-      <p>
-        Notice the URL change each time. If you click the back button at this
-        point, would you expect to go back to the login page? No! You're already
-        logged in. Try it out, and you'll see you go back to the page you
-        visited just *before* logging in, the public page.
-      </p>
-      <Router>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<PublicPage />} />
-          <Route path="/login" element={<LoginPage />} />
+  const [user, updateUser] = useState(null);
 
-          <Route path="/users" element={<UserList />}/>
-           <Route path="/users/:id" element={<UserDetail />} />
+  const checkUser = async () => {
+    try {
+      const user = await Auth.currentAuthenticatedUser();
+      console.log('user attributes: ', user.attributes);
+      updateUser(user);
 
-             
-          <Route
-            path="/protected"
-            element={
-              <RequireAuth>
-                <ProtectedPage />
-              </RequireAuth>
-            }
+      console.log("got user", user);
+
+      updateFormState(() => ({ ...formState, formType: "signedIn" }));
+    } catch (err) {
+      console.log("checkUser error", err);
+      updateFormState(() => ({ ...formState, formType: "signIn" }));
+    }
+  };
+
+  // Skip this if you're not using Hub. You can call updateFormState function right
+  // after the Auth.signOut() call in the button.
+  const setAuthListener = async () => {
+    Hub.listen("auth", (data) => {
+      switch (data.payload.event) {
+        case "signOut":
+          console.log(data);
+
+          updateFormState(() => ({
+            ...formState,
+            formType: "signIn",
+          }));
+
+          break;
+        case "signIn":
+          console.log(data);
+
+          break;
+      }
+    });
+  };
+
+  useEffect(() => {
+    checkUser();
+    setAuthListener();
+  }, []);
+
+  const onChange = (e) => {
+    e.persist();
+    updateFormState(() => ({ ...formState, [e.target.name]: e.target.value }));
+  };
+
+  const { formType } = formState;
+
+  const signUp = async () => {
+    const { username, email, password } = formState;
+    const phone_number = "+821023935342";
+    await Auth.signUp({ username, password, attributes: { email } });
+
+    updateFormState(() => ({ ...formState, formType: "confirmSignUp" }));
+  };
+
+  const confirmSignUp = async () => {
+    const { username, authCode } = formState;
+
+    try {
+      await Auth.confirmSignUp(username, authCode);
+    } catch (error) {
+        console.log('error confirming sign up', error);
+    }
+
+    updateFormState(() => ({ ...formState, formType: "signIn" }));
+  };
+
+  const reConfirmCode = async () => {
+    const { username } = formState;
+
+    try {
+      await Auth.resendSignUp(username);
+      console.log('code resent successfully');
+  } catch (err) {
+      console.log('error resending code: ', err);
+  }
+
+  };
+
+  const signIn = async () => {
+    const { username, password } = formState;
+
+    await Auth.signIn(username, password);
+
+    updateFormState(() => ({ ...formState, formType: "signedIn" }));
+  };
+
+  // console.log(formType);
+
+  return (
+    <>
+      <h1>App</h1>
+
+      {formType === "signUp" && (
+        <div>
+          <input name="username" onChange={onChange} placeholder="username" />
+          <input
+            name="password"
+            type="password"
+            onChange={onChange}
+            placeholder="password"
           />
-        </Route>
-      </Routes>
-    </Router>
+          <input name="email" onChange={onChange} placeholder="email" />
 
+          <button onClick={signUp}>Sign Up</button>
 
-    </AuthProvider>
-    );
+          <p>Already signed up?</p>
+
+          <button
+            onClick={() =>
+              updateFormState(() => ({
+                ...formState,
+                formType: "signIn",
+              }))
+            }
+          >
+            Sign In instead
+          </button>
+        </div>
+      )}
+
+      {formType === "confirmSignUp" && (
+        <div>
+          <input
+            name="authCode"
+            onChange={onChange}
+            placeholder="cnfirm auth code"
+          />
+          <button onClick={confirmSignUp}>Confirm Sign up</button>
+          <button onClick={reConfirmCode}>Do you want to reSend Code?</button>
+
+        </div>
+      )}
+
+      {formType === "signIn" && (
+        <div>
+          <input name="username" onChange={onChange} placeholder="username" />
+          <input
+            name="password"
+            type="password"
+            onChange={onChange}
+            placeholder="password"
+          />
+          <button onClick={signIn}>Sign In</button>
+
+          <p>No account yet?</p>
+
+          <button
+            onClick={() =>
+              updateFormState(() => ({
+                ...formState,
+                formType: "signUp",
+              }))
+            }
+          >
+            Sign Up now
+          </button>
+        </div>
+      )}
+
+      {formType === "signedIn" && (
+        <div>
+          <h2>
+            Welcome the app, {user.username} ({user.attributes.email})!
+          </h2>
+
+          <button
+            onClick={() => {
+              Auth.signOut({ global: true });
+            }}
+          >
+            Sign out
+          </button>
+        </div>
+      )}
+
+      <hr />
+    </>
+  );
 }
 
-function Layout() {
-    return (<div>
-      <AuthStatus />
-
-      <ul>
-        <li>
-          <Link to="/">Public Page</Link>
-        </li>
-        <li>
-          <Link to="/protected">Protected Page</Link>
-        </li>
-        <li>
-          <Link to="/users">users</Link>
-        </li>
-      </ul>
-
-      <Outlet />
-    </div>);
-}
-var AuthContext = React.createContext(null);
-
-function AuthProvider({children}) {
-    let [user, setUser] = useState();
-    let signin = function (newUser, callback) {
-        return fakeAuthProvider.signin(function () {
-            setUser(newUser);
-            callback();
-        });
-    };
-    let signout = function (callback) {
-        return fakeAuthProvider.signout(function () {
-            setUser(null);
-            callback();
-        });
-    };
-    let value = { user, signin, signout };
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-function useAuth() {
-    return React.useContext(AuthContext);
-}
-function AuthStatus() {
-    var auth = useAuth();
-    var navigate = (0, useNavigate)();
-    if (!auth.user) {
-        return <p>You are not logged in.</p>;
-    }
-    return (<p>
-      Welcome {auth.user}!{" "}
-      <button onClick={function () {
-            auth.signout(function () { return navigate("/"); });
-        }}>
-        Sign out
-      </button>
-    </p>);
-}
-function RequireAuth(_a) {
-    var children = _a.children;
-    var auth = useAuth();
-    var location = (0, useLocation)();
-    if (!auth.user) {
-        // Redirect them to the /login page, but save the current location they were
-        // trying to go to when they were redirected. This allows us to send them
-        // along to that page after they login, which is a nicer user experience
-        // than dropping them off on the home page.
-        return <Navigate to="/login" state={{ from: location }} replace/>;
-    }
-    return children;
-}
-function LoginPage() {
-  let navigate = useNavigate();
-  let location = useLocation();
-  let auth = useAuth();
-
-  let from = location.state?.from?.pathname || "/";  
-  
-  function handleSubmit(event) {
-        event.preventDefault();
-        let formData = new FormData(event.currentTarget);
-        let username = formData.get("username");
-        auth.signin(username, function () {
-            // Send them back to the page they tried to visit when they were
-            // redirected to the login page. Use { replace: true } so we don't create
-            // another entry in the history stack for the login page.  This means that
-            // when they get to the protected page and click the back button, they
-            // won't end up back on the login page, which is also really nice for the
-            // user experience.
-            navigate(from, { replace: true });
-        });
-    }
-    return (<div>
-      <p>You must log in to view the page at {from}</p>
-
-      <form onSubmit={handleSubmit}>
-        <label>
-          Username: <input name="username" type="text"/>
-        </label>{" "}
-        <button type="submit">Login</button>
-      </form>
-    </div>);
-}
-function PublicPage() {
-    return <h3>Public</h3>;
-}
-function ProtectedPage() {
-    return <h3>Protected</h3>;
-}
+export default App;
